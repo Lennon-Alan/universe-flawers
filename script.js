@@ -1,6 +1,132 @@
 (() => {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ---------- audio: musica de fondo + sonido de carta ---------- */
+
+  const MUSIC_SRC = "bg-music.mp3";
+  const CARD_SRC = "card-sound.mp3";
+
+  const musicBtn = document.getElementById("musicBtn");
+  const bgMusic = new Audio(MUSIC_SRC);
+  bgMusic.loop = true;
+
+  const cardSound = new Audio(CARD_SRC);
+  cardSound.volume = 0.85;
+  cardSound.loop = true;
+
+  const BG_VOLUME = 0.45;
+  const DUCK_VOLUME = 0.1;
+
+  let bgAvailable = true;
+  let cardChime = false;
+
+  bgMusic.addEventListener("error", () => {
+    bgAvailable = false;
+    musicBtn.style.display = "none";
+  });
+  cardSound.addEventListener("error", () => {
+    cardChime = true;
+  });
+
+  let musicOn = false;
+  bgMusic.volume = BG_VOLUME;
+
+  function startBg() {
+    if (!bgAvailable || musicOn) return;
+    bgMusic.play()
+      .then(() => {
+        musicOn = true;
+        musicBtn.classList.add("playing");
+        musicBtn.textContent = "\u{1F3B6}";
+        musicBtn.setAttribute("aria-label", "Pausar música de fondo");
+      })
+      .catch((err) => {
+        if (err && err.name === "NotAllowedError") return;
+        bgAvailable = false;
+        musicBtn.style.display = "none";
+      });
+  }
+
+  function toggleMusic() {
+    if (musicOn) {
+      bgMusic.pause();
+      musicOn = false;
+      musicBtn.classList.remove("playing");
+      musicBtn.textContent = "\u{1F3B5}";
+      musicBtn.setAttribute("aria-label", "Reproducir música de fondo");
+    } else {
+      startBg();
+    }
+  }
+
+  document.addEventListener("pointerdown", startBg, { once: true });
+  document.addEventListener("touchstart", startBg, { once: true });
+  document.addEventListener("click", startBg, { once: true });
+  document.addEventListener("keydown", startBg, { once: true });
+  window.addEventListener("load", startBg);
+  setTimeout(startBg, 300);
+  setTimeout(startBg, 800);
+  setTimeout(startBg, 1600);
+  musicBtn.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+    toggleMusic();
+  });
+
+  /* ---------- splash: abrir la carta ---------- */
+
+  const splash = document.getElementById("splash");
+  const splashCard = document.getElementById("splashCard");
+
+  function openSplash() {
+    if (splash.dataset.open) return;
+    splash.dataset.open = "1";
+    startBg();
+    chime();
+    burst(window.innerWidth / 2, window.innerHeight / 2, 18);
+    if (reduce) {
+      splash.remove();
+      return;
+    }
+    splashCard.classList.add("opening");
+    splash.classList.add("fading");
+    setTimeout(() => splash.remove(), 850);
+  }
+
+  splash.addEventListener("pointerdown", openSplash);
+
+  let chimeCtx = null;
+  function chime() {
+    try {
+      chimeCtx = chimeCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const now = chimeCtx.currentTime;
+      [523.25, 659.25, 783.99].forEach((f, i) => {
+        const o = chimeCtx.createOscillator();
+        const g = chimeCtx.createGain();
+        o.type = "sine";
+        o.frequency.value = f;
+        const t = now + i * 0.09;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.12, t + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+        o.connect(g).connect(chimeCtx.destination);
+        o.start(t);
+        o.stop(t + 1);
+      });
+    } catch (e) {
+      /* sin audio */
+    }
+  }
+
+  function playCardSound() {
+    cardSound.pause();
+    cardSound.currentTime = 0;
+    if (cardChime) chime();
+    else cardSound.play().catch(() => {
+      cardChime = true;
+      chime();
+    });
+  }
+
   /* ---------- utilidades ---------- */
 
   const shuffle = (arr) => {
@@ -18,20 +144,38 @@
   /* ---------- estrellas ---------- */
 
   const starsEl = document.getElementById("stars");
-  const count = Math.min(140, Math.max(90, Math.floor(window.innerWidth * window.innerHeight / 9000)));
+  const count = Math.min(240, Math.max(130, Math.floor(window.innerWidth * window.innerHeight / 6000)));
 
   for (let i = 0; i < count; i++) {
     const s = document.createElement("div");
     s.className = "star";
-    const size = 0.8 + Math.random() * 2.2;
+    const size = 0.8 + Math.random() * 2.8;
     s.style.width = size + "px";
     s.style.height = size + "px";
     s.style.left = Math.random() * 100 + "%";
     s.style.top = Math.random() * 100 + "%";
-    s.style.setProperty("--t", (2 + Math.random() * 3.6).toFixed(2) + "s");
+    s.style.setProperty("--t", (1.8 + Math.random() * 3.6).toFixed(2) + "s");
     s.style.animationDelay = (-Math.random() * 6).toFixed(2) + "s";
     s.style.boxShadow = `0 0 ${(size * 3).toFixed(1)}px rgba(255,255,255,0.85)`;
+    if (Math.random() < 0.25) s.style.background = "#ffe9a8";
     starsEl.appendChild(s);
+  }
+
+  const starsNearEl = document.getElementById("starsNear");
+  for (let i = 0; i < 26; i++) {
+    const s = document.createElement("div");
+    s.className = "star";
+    const size = 2.4 + Math.random() * 3.4;
+    s.style.width = size + "px";
+    s.style.height = size + "px";
+    s.style.left = Math.random() * 100 + "%";
+    s.style.top = Math.random() * 100 + "%";
+    s.style.setProperty("--t", (1.6 + Math.random() * 2.2).toFixed(2) + "s");
+    s.style.animationDelay = (-Math.random() * 4).toFixed(2) + "s";
+    const gold = Math.random() < 0.4;
+    s.style.background = gold ? "#ffe9a8" : "#ffffff";
+    s.style.boxShadow = `0 0 ${(size * 4.5).toFixed(1)}px ${gold ? "rgba(255,224,130,0.95)" : "rgba(255,255,255,0.9)"}`;
+    starsNearEl.appendChild(s);
   }
 
   /* ---------- estrellas fugaces ---------- */
@@ -391,6 +535,8 @@
   const ENTRANCES = ["enter-pop", "enter-flip", "enter-wiggle", "enter-zoom", "enter-rise"];
 
   function openCard(b) {
+    bgMusic.volume = DUCK_VOLUME;
+    playCardSound();
     card.className = "modal-card card " + ENTRANCES[Math.floor(Math.random() * ENTRANCES.length)];
     card.style.background = b.bg;
     card.innerHTML =
@@ -406,6 +552,9 @@
   }
 
   function closeModal() {
+    cardSound.pause();
+    cardSound.currentTime = 0;
+    bgMusic.volume = BG_VOLUME;
     modal.classList.remove("open");
     modal.setAttribute("aria-hidden", "true");
   }
