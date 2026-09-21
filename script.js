@@ -11,11 +11,34 @@
   bgMusic.loop = true;
 
   const cardSound = new Audio(CARD_SRC);
-  cardSound.volume = 0.85;
+  cardSound.volume = 0.9;
   cardSound.loop = true;
+  bgMusic.preload = "auto";
+  cardSound.preload = "auto";
 
   const BG_VOLUME = 0.45;
   const DUCK_VOLUME = 0.1;
+
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  let audioUnlocked = false;
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    bgMusic.muted = true;
+    cardSound.muted = true;
+    bgMusic.play()
+      .then(() => { bgMusic.muted = false; })
+      .catch(() => {});
+    cardSound.play()
+      .then(() => {
+        cardSound.pause();
+        cardSound.currentTime = 0;
+        cardSound.muted = false;
+      })
+      .catch(() => {});
+  }
 
   let bgAvailable = true;
   let cardChime = false;
@@ -80,6 +103,7 @@
   function openSplash() {
     if (splash.dataset.open) return;
     splash.dataset.open = "1";
+    if (isIOS) unlockAudio();
     startBg();
     chime();
     burst(window.innerWidth / 2, window.innerHeight / 2, 18);
@@ -536,6 +560,7 @@
 
   function openCard(b) {
     bgMusic.volume = DUCK_VOLUME;
+    if (isIOS) bgMusic.muted = true;
     playCardSound();
     card.className = "modal-card card " + ENTRANCES[Math.floor(Math.random() * ENTRANCES.length)];
     card.style.background = b.bg;
@@ -554,6 +579,7 @@
   function closeModal() {
     cardSound.pause();
     cardSound.currentTime = 0;
+    bgMusic.muted = false;
     bgMusic.volume = BG_VOLUME;
     modal.classList.remove("open");
     modal.setAttribute("aria-hidden", "true");
