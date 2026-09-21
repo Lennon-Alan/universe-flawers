@@ -1,62 +1,68 @@
 (() => {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- audio: musica de fondo + sonido de carta ---------- */
+  /* ---------- audio: un solo reproductor que cambia de pista ---------- */
 
   const MUSIC_SRC = "bg-music.mp3";
   const CARD_SRC = "card-sound.mp3";
 
   const musicBtn = document.getElementById("musicBtn");
-  const bgMusic = new Audio(MUSIC_SRC);
-  bgMusic.loop = true;
-
-  const cardSound = new Audio(CARD_SRC);
-  cardSound.volume = 0.9;
-  cardSound.loop = true;
-  bgMusic.preload = "auto";
-  cardSound.preload = "auto";
 
   const BG_VOLUME = 0.45;
-  const DUCK_VOLUME = 0.1;
+  const CARD_VOLUME = 0.9;
+
+  const player = new Audio(MUSIC_SRC);
+  player.loop = true;
+  player.preload = "auto";
+  player.volume = BG_VOLUME;
 
   const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  let playerMode = "bg";
+  let bgPos = 0;
+  let musicOn = false;
+
+  player.addEventListener("error", () => {
+    if (player.src.indexOf(MUSIC_SRC) !== -1) musicBtn.style.display = "none";
+  });
+
+  function swapSrc(src, at, vol) {
+    player.volume = vol;
+    player.onloadedmetadata = () => { player.currentTime = at || 0; };
+    player.src = src;
+    player.load();
+  }
+
+  function switchToCard() {
+    if (playerMode === "card") return;
+    bgPos = player.currentTime;
+    playerMode = "card";
+    swapSrc(CARD_SRC, 0, CARD_VOLUME);
+    player.play().catch(() => chime());
+  }
+
+  function switchToBg() {
+    if (playerMode === "bg") return;
+    playerMode = "bg";
+    swapSrc(MUSIC_SRC, bgPos, BG_VOLUME);
+    if (musicOn) player.play().catch(() => {});
+  }
 
   let audioUnlocked = false;
   function unlockAudio() {
     if (audioUnlocked) return;
     audioUnlocked = true;
-    bgMusic.muted = true;
-    cardSound.muted = true;
-    bgMusic.play()
-      .then(() => { bgMusic.muted = false; })
-      .catch(() => {});
-    cardSound.play()
-      .then(() => {
-        cardSound.pause();
-        cardSound.currentTime = 0;
-        cardSound.muted = false;
-      })
+    player.muted = true;
+    player.play()
+      .then(() => { player.muted = false; })
       .catch(() => {});
   }
 
-  let bgAvailable = true;
-  let cardChime = false;
-
-  bgMusic.addEventListener("error", () => {
-    bgAvailable = false;
-    musicBtn.style.display = "none";
-  });
-  cardSound.addEventListener("error", () => {
-    cardChime = true;
-  });
-
-  let musicOn = false;
-  bgMusic.volume = BG_VOLUME;
-
   function startBg() {
-    if (!bgAvailable || musicOn) return;
-    bgMusic.play()
+    if (musicOn) return;
+    if (playerMode !== "bg") switchToBg();
+    player.play()
       .then(() => {
         musicOn = true;
         musicBtn.classList.add("playing");
@@ -65,14 +71,13 @@
       })
       .catch((err) => {
         if (err && err.name === "NotAllowedError") return;
-        bgAvailable = false;
         musicBtn.style.display = "none";
       });
   }
 
   function toggleMusic() {
     if (musicOn) {
-      bgMusic.pause();
+      player.pause();
       musicOn = false;
       musicBtn.classList.remove("playing");
       musicBtn.textContent = "\u{1F3B5}";
@@ -139,16 +144,6 @@
     } catch (e) {
       /* sin audio */
     }
-  }
-
-  function playCardSound() {
-    cardSound.pause();
-    cardSound.currentTime = 0;
-    if (cardChime) chime();
-    else cardSound.play().catch(() => {
-      cardChime = true;
-      chime();
-    });
   }
 
   /* ---------- utilidades ---------- */
@@ -559,9 +554,7 @@
   const ENTRANCES = ["enter-pop", "enter-flip", "enter-wiggle", "enter-zoom", "enter-rise"];
 
   function openCard(b) {
-    bgMusic.volume = DUCK_VOLUME;
-    if (isIOS) bgMusic.muted = true;
-    playCardSound();
+    switchToCard();
     card.className = "modal-card card " + ENTRANCES[Math.floor(Math.random() * ENTRANCES.length)];
     card.style.background = b.bg;
     card.innerHTML =
@@ -577,10 +570,7 @@
   }
 
   function closeModal() {
-    cardSound.pause();
-    cardSound.currentTime = 0;
-    bgMusic.muted = false;
-    bgMusic.volume = BG_VOLUME;
+    switchToBg();
     modal.classList.remove("open");
     modal.setAttribute("aria-hidden", "true");
   }
