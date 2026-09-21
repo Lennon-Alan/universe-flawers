@@ -60,6 +60,10 @@ body {
   transform: translateZ(-240px) scale(1.3);
 }
 
+.layer-stars-near {
+  transform: translateZ(-60px) scale(1.12);
+}
+
 .layer-bouquets {
   transform: translateZ(90px);
 }
@@ -432,6 +436,209 @@ body {
   }
 }
 
+/* ---------- boton de musica ---------- */
+
+.music-btn {
+  position: fixed;
+  left: max(12px, env(safe-area-inset-left));
+  top: max(12px, env(safe-area-inset-top));
+  z-index: 40;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 214, 120, 0.5);
+  background: rgba(16, 12, 40, 0.55);
+  color: #ffd98a;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: transform 0.15s;
+}
+
+.music-btn:active {
+  transform: scale(0.88);
+}
+
+.music-btn.playing {
+  animation: music-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes music-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 214, 120, 0.35), 0 4px 14px rgba(0, 0, 0, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(255, 214, 120, 0), 0 4px 14px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* ---------- splash / carta de apertura ---------- */
+
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(90, 60, 190, 0.32), transparent 60%),
+    linear-gradient(180deg, #070b1a 0%, #141033 55%, #1d0f3a 100%);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.splash-card {
+  position: relative;
+  width: min(84vw, 320px);
+  background: linear-gradient(165deg, #fffdf4 0%, #ffecc9 100%);
+  border: 1px solid rgba(255, 210, 120, 0.85);
+  border-radius: 18px 18px 22px 18px;
+  padding: 30px 24px 24px;
+  text-align: center;
+  color: #7a5518;
+  box-shadow:
+    0 30px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  animation: letter-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.splash-card::before,
+.splash-card::after {
+  content: "";
+  position: absolute;
+  width: 26px;
+  height: 22px;
+  top: -12px;
+  background: #ffe28a;
+  border-top: 1px solid rgba(255, 210, 120, 0.8);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.splash-card::before {
+  left: 14px;
+  transform: rotate(-8deg);
+}
+
+.splash-card::after {
+  right: 14px;
+  transform: rotate(8deg);
+}
+
+@keyframes letter-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.92) rotate(-1deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+
+.splash-stamp {
+  font-size: clamp(0.74rem, 3.2vw, 0.85rem);
+  letter-spacing: 0.2em;
+  color: #b58a3c;
+  text-transform: uppercase;
+}
+
+.splash-title {
+  margin-top: 6px;
+  font-size: clamp(2rem, 9vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #b8791e;
+}
+
+.splash-heart {
+  font-size: clamp(1.8rem, 8vw, 2.3rem);
+  line-height: 1;
+  margin: 8px 0 6px;
+  animation: heart-beat 1.6s ease-in-out infinite;
+}
+
+@keyframes heart-beat {
+  0%, 100% { transform: scale(1); }
+  18% { transform: scale(1.22); }
+  30% { transform: scale(0.96); }
+  42% { transform: scale(1.16); }
+}
+
+.splash-note {
+  font-size: clamp(0.78rem, 3.4vw, 0.88rem);
+  color: #a37734;
+  font-style: italic;
+}
+
+.seal {
+  margin-top: 16px;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 235, 180, 0.85);
+  background: radial-gradient(circle at 35% 30%, #ff9d6b, #e05a3a 60%, #b3312a 100%);
+  color: #fff7e6;
+  font-size: 26px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(120, 40, 20, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  transition: transform 0.15s ease-out;
+}
+
+.seal:active {
+  transform: scale(0.88);
+}
+
+.seal-icon {
+  text-shadow: 0 1px 2px rgba(90, 20, 10, 0.5);
+}
+
+.splash-cta {
+  margin-top: 12px;
+  font-size: clamp(0.82rem, 3.5vw, 0.92rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #8a6420;
+  text-transform: lowercase;
+}
+
+.splash.fading {
+  animation: splash-fade 0.55s ease forwards;
+}
+
+@keyframes splash-fade {
+  to { opacity: 0; }
+}
+
+.splash-card.opening {
+  animation: card-open 0.8s cubic-bezier(0.5, 0, 0.8, 0.38) forwards;
+}
+
+@keyframes card-open {
+  0% {
+    transform: perspective(700px) rotateX(0deg) scale(1);
+    opacity: 1;
+  }
+  35% {
+    transform: perspective(700px) rotateX(-12deg) scale(1.07);
+    opacity: 1;
+  }
+  100% {
+    transform: perspective(700px) rotateX(-72deg) scale(1.45) translateY(-46px);
+    opacity: 0;
+  }
+}
+
 /* ---------- modal / tarjetas ---------- */
 
 .modal {
@@ -584,7 +791,13 @@ body {
   .hero-sway,
   .leaf3,
   .spark,
+  .music-btn.playing,
+  .splash-heart,
   .card-em {
+    animation: none !important;
+  }
+
+  .splash-card {
     animation: none !important;
   }
 }
